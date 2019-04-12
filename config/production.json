@@ -1,0 +1,10 @@
+{
+  "port" : 8081,
+  "db" : {
+    "host" : "localhost",
+    "user" : "newhouse_rw",
+    "password" : "f3ea92d38cc",
+    "database" : "newhouse_shengtai",
+    "port" : 8888
+  }
+}

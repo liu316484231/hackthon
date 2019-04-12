@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <title>女神情感探测器</title>
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css">
+   <link rel="stylesheet" href="stylesheets/style.css">
+   <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+   <script src="javascripts/jquery.min.js"></script>
+   <!--high charts-->
+   <script src="https://img.highcharts.com.cn/highcharts/highcharts.js"></script>
+   <script src="https://img.highcharts.com.cn/highcharts/modules/exporting.js"></script>
+   <script src="https://img.highcharts.com.cn/highcharts/modules/series-label.js"></script>
+   <script src="https://img.highcharts.com.cn/highcharts/modules/oldie.js"></script>
+   <script src="https://img.highcharts.com.cn/highcharts-plugins/highcharts-zh_CN.js"></script>
+   <script src="https://img.highcharts.com.cn/highcharts/themes/sand-signika.js"></script>
+</head>
+<body>
+<section class="section">
+   <div class="container">
+      <h2 class="title is-3 t1"><i class="fas fa-heart"></i>&nbsp;女神情感探测器&nbsp;<i class="far fa-heart"></i></h2>
+      <div class="tile is-ancestor">
+         <div class="tile is-vertical is-5">
+            <div class="tile">
+               <div class="tile is-parent is-vertical">
+                  <article class="tile is-child notification is-primary">
+                     <p class="title">聊天输入：</p>
+                     <!--<p class="subtitle">Top tile</p>-->
+                     <textarea id="box" class="textarea" placeholder="记录.." rows="17"></textarea>
+                     <br/>
+                     <input id="msg" class="input is-rounded is-danger" type="text" placeholder="输入.."/>
+                     <br/>
+                     <br/>
+                     <a class="button is-danger is-fullwidth is-rounded" onclick="submit()">提交</a>
+                  </article>
+               </div>
+            </div>
+         </div>
+         <div class="tile is-parent">
+            <article class="tile is-child notification is-success">
+               <div class="content">
+                  <p class="title">情感分析：</p>
+                  <div class="content">
+                     <div class="card">
+                        <header class="card-header">
+                           <p class="card-header-title">
+                              综合情感得分:<span id="avgScore"></span>
+                           </p>
+                        </header>
+                     </div>
+                     <br/>
+                     <div class="card">
+                        <div id="chart" style="min-width:400px;height:400px"></div>
+                     </div>
+                     <br/>
+                     <div class="card">
+                        <header class="card-header">
+                           <p class="card-header-title">
+                             建议回复:
+                              <span id="suggest"></span>
+                           </p>
+                        </header>
+                     </div>
+                     <!-- Content -->
+                  </div>
+               </div>
+            </article>
+         </div>
+      </div>
+   </div>
+</section>
+</body>
+</html>
+
+<script>
+    let data_list = [];
+    let chart = refreshChart();
+
+    const mood_good = ["开心摸摸大", "😘😘😘😘😘"];
+    const mood_bad = ["别伤心呀", "我错了！！","😭😭😭😭😭"];
+    const mood_mid = ["你好呀！"];
+
+    function submit(){
+        let msg = $("#msg").val();
+        if(msg == null || msg.trim() === ""){
+            alert("输入为空,请重新输入");
+            return;
+        }
+        //ajax
+        $.get("http://10.2.154.127:8080/baidu?text=" + msg, function(data){
+            // alert(JSON.stringify(data));
+            let res = data.data;
+            let score = Math.floor(res.confd * 100);
+            let type = res.polar;
+            // let score = Math.floor(Math.random() * 100);
+            let mood = "";
+            if(type === 1){
+                mood = "正面";
+            }else if(type === 0){
+                mood = "中性";
+                score = 50;
+            }else {
+                mood = "负面";
+                score = 100 - score;
+            }
+            let suggest = "";
+            let sum = 0;
+            data_list.push(score);
+            chart = refreshChart();
+
+            data_list.forEach(function(data){
+                sum += data;
+            });
+            let avgScore = Math.floor(sum/data_list.length);
+            if(avgScore > 50){
+                suggest = getRand(mood_good);
+            }else {
+                suggest = getRand(mood_bad);
+            }
+            $("#box").append(msg + "【得分:" + score + "】" + "【情感:" + mood + "】" + "\n");
+            //根据avg推荐回复
+            $("#suggest").html(suggest);
+            $("#avgScore").html(avgScore);
+        });
+
+    }
+
+    function refreshChart(){
+        return Highcharts.chart('chart', {
+            title: {
+                text: '情感分析曲线'
+            },
+            yAxis: {
+                title: {
+                    text: '情感得分(0-100)'
+                }
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+            plotOptions: {
+                series: {
+                    label: {
+                        connectorAllowed: false
+                    },
+                    pointStart: 1
+                }
+            },
+            series: [
+                {
+                    name: '情感分数',
+                    data: data_list
+                }],
+            responsive: {
+                rules: [{
+                    condition: {
+                        maxWidth: 500
+                    },
+                    chartOptions: {
+                        legend: {
+                            layout: 'horizontal',
+                            align: 'center',
+                            verticalAlign: 'bottom'
+                        }
+                    }
+                }]
+            }
+        });
+    }
+
+    function getRand(list){
+        let index = Math.floor(Math.random() * list.length);
+        return list[index];
+    }
+</script>
