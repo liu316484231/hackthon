@@ -78,8 +78,8 @@
     let data_list = [];
     let chart = refreshChart();
 
-    const mood_good = ["开心摸摸大", "😘😘😘😘😘"];
-    const mood_bad = ["别伤心呀", "我错了！！","😭😭😭😭😭"];
+    const mood_good = ["开心摸摸哒~","😘😘😘😘😘","嗯嗯！","☺☺☺","😊😊😊😊😊😊","😄😄😄","ヾ(o◕∀◕)ﾉヾ","😋😋😋😋😋"];
+    const mood_bad = ["别伤心呀", "我错了！！","😭😭😭😭😭", "没关系","💔💔💔💔💔", "😞😞😞", "😣😣😣😣😣", "😈😈😈"];
     const mood_mid = ["你好呀！"];
 
     function submit(){
@@ -114,8 +114,10 @@
                 sum += data;
             });
             let avgScore = Math.floor(sum/data_list.length);
-            if(avgScore > 50){
+            if(score > 50){
                 suggest = getRand(mood_good);
+            }else if(score === 50){
+                suggest = getRand(mood_mid);
             }else {
                 suggest = getRand(mood_bad);
             }
