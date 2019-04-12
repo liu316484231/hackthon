@@ -89,7 +89,7 @@
             return;
         }
         //ajax
-        $.get("http://10.2.154.127:8080/baidu?text=" + msg, function(data){
+        $.get("http://10.23.1.2:8001//baidu?text=" + msg, function(data){
             // alert(JSON.stringify(data));
             let res = data.data;
             let score = Math.floor(res.confd * 100);
